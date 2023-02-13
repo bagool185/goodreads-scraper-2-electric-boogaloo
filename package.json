@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/bagool185/goodreads-scraper-2-electric-boogaloo#readme",
   "dependencies": {
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3",
     "selenium-webdriver": "^4.8.0"
   }
 }
