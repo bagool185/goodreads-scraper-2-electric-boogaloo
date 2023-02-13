@@ -17,9 +17,7 @@ const cleanDrivers = () => {
 }
 
 async function getCurrentReading (){
-    let titles = await driver.findElements(
-        By.className("title"))
-    // let title = titles[1];
+    let titles = await driver.findElements(By.className("title"))
     // console.log(await title.findElement(By.css("a")).getAttribute("title"));
     titles.splice(0, 1);
     let names = [];
@@ -29,6 +27,25 @@ async function getCurrentReading (){
     return names;
 };
 
-getCurrentReading().then((anything) => {console.log(anything)});
+// async function getTopRated () {
+//     driver.get(`${baseUrl}/review/list/${userId}?shelf=read&sort=rating`);
 
-setTimeout(cleanDrivers, 5000);
+//     let ratedTitles = await driver.findElements(By.className("title"))
+//     ratedTitles.splice(0,1);
+//     let ratedNames = [];
+//     for (let name of ratedTitles){
+//         ratedNames.push(await name.findElement(By.css("a")).getAttribute("title"));
+//     }
+//     ratedNames.length = 5;
+//     // console.log(ratedNames[0]);
+//     return ratedNames;
+// }
+getCurrentReading().then((anything) => {
+    console.log("You are currently reading: ");
+    console.log(anything)});
+
+// getTopRated().then((anything2) => {
+//     console.log("Your top rated books are: ");
+//     console.log(anything2)});
+
+setTimeout(cleanDrivers, 20000);
