@@ -3,10 +3,11 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const baseUrl = "http://goodreads.com";
 const userId = "82924012-bagool";
-const searchData = "THE BIBLE";
+let searchData = "THE BIBLE";
 const { By } = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const firefox = require('selenium-webdriver/firefox');
+const { SlashCommandBuilder } = require('discord.js');
 
     let driver = new webdriver.Builder()
     .forBrowser('firefox')
@@ -51,8 +52,10 @@ async function searchBook(){
     let searchTitles = [];
     for (let book of searchResults) {
         searchTitles.push(await book.getText());
+    } 
+    if (searchTitles.length > 5) {
+      searchTitles.length = 5;
     }
-    searchTitles.length = 5;
     return searchTitles;
 }
 
@@ -67,7 +70,7 @@ async function searchBook(){
 //     console.log("Your top rated books are: ");
 //     console.log(anything2)});
 
-const { REST, Routes } = require('discord.js');
+const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
 console.log(process.env.TOKEN);
 const commands = [
   {
@@ -77,6 +80,14 @@ const commands = [
   {
     name: 'search',
     description: 'Searches for a book by title',
+    options: [
+      {
+        "name": "title",
+        "description": "Title of the book you're searching for",
+        "requried": true,
+        "type": 3,
+      }
+    ]
   },
 ];
 
@@ -111,6 +122,7 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'search') {
     await interaction.deferReply();
+    searchData = interaction.options.getString("title");
     let searchResults = JSON.stringify(await searchBook());
     await interaction.editReply(searchResults);
   }
