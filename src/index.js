@@ -8,6 +8,7 @@ const { By } = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const firefox = require('selenium-webdriver/firefox');
 const { SlashCommandBuilder } = require('discord.js');
+const { commands } = require('./commands.js');
 
     let driver = new webdriver.Builder()
     .forBrowser('firefox')
@@ -72,31 +73,13 @@ async function searchBook(){
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
 console.log(process.env.TOKEN);
-const commands = [
-  {
-    name: 'ping',
-    description: 'Replies with Pong!',
-  },
-  {
-    name: 'search',
-    description: 'Searches for a book by title',
-    options: [
-      {
-        "name": "title",
-        "description": "Title of the book you're searching for",
-        "requried": true,
-        "type": 3,
-      }
-    ]
-  },
-];
 
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+  
 
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
-
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), { body: commands });
 
     console.log('Successfully reloaded application (/) commands.');
