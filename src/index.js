@@ -37,14 +37,27 @@ async function getCurrentReading (){
 async function getTopRated () {
     driver.get(`${baseUrl}/review/list/${userId}?shelf=read&sort=rating`);
 
-    let ratedTitles = await driver.findElements(By.className("title"));
-    ratedTitles.splice(0,1);
-    let ratedNames = [];
-    for (let name of ratedTitles){
-        ratedNames.push(await name.findElement(By.css("a")).getAttribute("title"));
+    let ratedRows = await driver.findElements(By.className("bookalike"));
+    ratedRows.length = 5;
+    let books = [];
+    for (let row of ratedRows) {
+      let title = await row.findElement(By.className("title")).getText();
+      let author = await row.findElement(By.className("author")).getText();
+      let avgRating = await row.findElement(By.className("avg_rating")).getText();
+      // let rating = await row.findElement(By.className("stars")).getAttribute("data-rating");
+      let cover = await row.findElement(By.css("img")).getAttribute("src");
+      cover = cover.replace("._SY75_","");
+      books.push({title, author, avgRating, cover});
     }
-    ratedNames.length = 5;
-    return ratedNames;
+    return books;
+    // let ratedTitles = await driver.findElements(By.className("title"));
+    // ratedTitles.splice(0,1);
+    // let ratedNames = [];
+    // for (let name of ratedTitles){
+    //     ratedNames.push(await name.findElement(By.css("a")).getAttribute("title"));
+    // }
+    // ratedNames.length = 5;
+    // return ratedNames;
 }
 
 async function searchBook(){
@@ -105,23 +118,27 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.commandName === 'top_rated') {
-    await interaction.deferReply();
+    // await interaction.deferReply();
     userId = interaction.options.getString("user");
-    let topRated = JSON.stringify(await getTopRated());
-    await interaction.editReply(topRated);
+    let topRated = await getTopRated();
+    // console.log(topRated[0].title)
+    // await interaction.editReply(topRated[0].title);
+    // console.log(topRated);
+    const embed = new EmbedBuilder()
+      .setColor(0x0099FF)
+      .setTitle("Top Rated Book!")
+      .setThumbnail(topRated[0].cover)
+      .addFields(
+        {name: "Book Title", value: topRated[0].title, inline:true},
+        {name: "Book Author", value: topRated[0].author, inline: true},
+        {name: "Average Rating", value: topRated[0].avgRating, inline : true}
+      )
 
-    // const embed = new EmbedBuilder()
-    //   .setColor(0x0099FF)
-    //   .setTitle("Babys First Embed")
-    //   .addFields(
-    //     {name: 'Field Title 101', value: 'Values pls'}
-    //   )
-
-    //   const channel = client.channels.cache.find(channel => channel.name === "generalchannelName")
-    //   channel.send(embed);   --Tried adding embed into the reply but no good, didn't have time to look further :(
-    // }
+      const channel = client.channels.cache.find(channel => channel.name === "general")
+      channel.send({ embeds : [embed] });
+    }
 });
 
-client.login(process.env.TOKEN);
+// client.login(process.env.TOKEN);
 
 // setTimeout(cleanDrivers, 10000);
