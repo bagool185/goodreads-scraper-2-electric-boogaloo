@@ -24,14 +24,20 @@ const { EmbedBuilder } = require('discord.js');
 async function getCurrentReading (){
     driver.get(`${baseUrl}/review/list/${userId}?shelf=currently-reading`);
 
-    let titles = await driver.findElements(By.className("title"))
+    let rows = await driver.findElements(By.className("bookalike"))
     // console.log(await title.findElement(By.css("a")).getAttribute("title"));
-    titles.splice(0, 1);
-    let names = [];
-    for (let title of titles){
-        names.push(await title.findElement(By.css("a")).getAttribute("title"));
+    // titles.splice(0, 1);
+    let books = [];
+    for (let row of rows){
+        let title = await row.findElement(By.className("title")).getText();
+        let author = await row.findElement(By.className("author")).getText();
+        let avgRating = await row.findElement(By.className("avg_rating")).getText();
+        let cover = await row.findElement(By.css("img")).getAttribute("src");
+        cover = cover.replace("._SY75_","");
+        books.push({title, author, avgRating, cover});
     }
-    return names;
+    // console.log(books[0].title);
+    return books;
 };
 
 async function getTopRated () {
@@ -91,6 +97,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   }
 })();
 
+
 const { Client, GatewayIntentBits } = require('discord.js');
 const { channel } = require('diagnostics_channel');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -111,10 +118,25 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.commandName === 'currently_reading') {
-    await interaction.deferReply();
+    // await interaction.deferReply();
     userId = interaction.options.getString("user");
-    let currentResults = JSON.stringify(await getCurrentReading());
-    await interaction.editReply(currentResults);
+    let currentResults = await getCurrentReading();
+    // await interaction.editReply(currentResults);
+    bookNum = 0;
+    for (book in currentResults) {
+      const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle("Current Reading")
+        .setThumbnail(currentResults[bookNum].cover)
+        .addFields(
+          {name: "Book Title", value: currentResults[bookNum].title, inline:true},
+          {name: "Author", value: currentResults[bookNum].author, inline:true},
+          {name: "Average Rating", value: currentResults[bookNum].avgRating, inline:true}
+        )
+        const channel = client.channels.cache.find(channel => channel.name === "general")
+        channel.send({ embeds : [embed] });
+        bookNum++;
+      }
   }
 
   if (interaction.commandName === 'top_rated') {
@@ -124,21 +146,25 @@ client.on('interactionCreate', async interaction => {
     // console.log(topRated[0].title)
     // await interaction.editReply(topRated[0].title);
     // console.log(topRated);
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle("Top Rated Book!")
-      .setThumbnail(topRated[0].cover)
-      .addFields(
-        {name: "Book Title", value: topRated[0].title, inline:true},
-        {name: "Book Author", value: topRated[0].author, inline: true},
-        {name: "Average Rating", value: topRated[0].avgRating, inline : true}
-      )
-
-      const channel = client.channels.cache.find(channel => channel.name === "general")
-      channel.send({ embeds : [embed] });
+    bookNum = 0;
+    for (book in topRated) {
+      const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle("Top Rated Books!")
+        .setThumbnail(topRated[bookNum].cover)
+        .addFields(
+          {name: "Book Title", value: topRated[bookNum].title, inline:true},
+          {name: "Book Author", value: topRated[bookNum].author, inline: true},
+          {name: "Average Rating", value: topRated[bookNum].avgRating, inline : true},
+        )
+          // await interaction.replied;
+        const channel = client.channels.cache.find(channel => channel.name === "general")
+        channel.send({ embeds : [embed] });
+        bookNum++;
     }
+  }
 });
 
-// client.login(process.env.TOKEN);
+client.login(process.env.TOKEN);
 
 // setTimeout(cleanDrivers, 10000);
