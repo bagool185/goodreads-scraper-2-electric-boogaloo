@@ -11,15 +11,17 @@ const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const { commands } = require('./commands.js');
 const { EmbedBuilder } = require('discord.js');
 
+  //Open browser window, headless allows for it to run in the background
+
     let driver = new webdriver.Builder()
     .forBrowser('firefox')
     // .setFirefoxOptions(new firefox.Options().headless())
     .build();
 
+    
 
-// const cleanDrivers = () => {
-//     driver.quit();
-// }
+
+//Get data from goodreads 
 
 async function searchBook(){
   driver.get(`${baseUrl}/search?q=${searchData}`);
@@ -85,7 +87,6 @@ async function getTopRated () {
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
 console.log(process.env.TOKEN);
-
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   
 
@@ -101,15 +102,20 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 })();
 
 
+//Create connection to discord 
+
 const { Client, GatewayIntentBits } = require('discord.js');
 const { channel } = require('diagnostics_channel');
 const { url } = require('inspector');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const wait = require('node:timers/promises').setTimeout;
+client.login(process.env.TOKEN);
 
 client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
+
+//Listen for commands and respond
 
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
@@ -178,6 +184,6 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(process.env.TOKEN);
+
 
 // setTimeout(cleanDrivers, 10000);
