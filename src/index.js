@@ -21,6 +21,21 @@ const { EmbedBuilder } = require('discord.js');
 //     driver.quit();
 // }
 
+async function searchBook(){
+  driver.get(`${baseUrl}/search?q=${searchData}`);
+
+  let searchResult = await driver.findElement(By.css("tr"));
+  let searchBook = [];
+  let title = await searchResult.findElement(By.className("bookTitle")).getText();
+  let author = await searchResult.findElement(By.className("authorName")).getText();
+  let cover = await searchResult.findElement(By.css("img")).getAttribute("src");
+  cover = cover.replace("._SY75_","");
+  let url = await searchResult.findElement(By.className("bookTitle")).getAttribute("href");
+  searchBook.push({title, author, cover, url});
+
+return searchBook;
+}
+
 async function getCurrentReading (){
     driver.get(`${baseUrl}/review/list/${userId}?shelf=currently-reading`);
 
@@ -34,7 +49,8 @@ async function getCurrentReading (){
         let avgRating = await row.findElement(By.className("avg_rating")).getText();
         let cover = await row.findElement(By.css("img")).getAttribute("src");
         cover = cover.replace("._SY75_","");
-        books.push({title, author, avgRating, cover});
+        let url = await row.findElement(By.css("a")).getAttribute("href");
+        books.push({title, author, avgRating, cover, url});
     }
     // console.log(books[0].title);
     return books;
@@ -53,7 +69,8 @@ async function getTopRated () {
       // let rating = await row.findElement(By.className("stars")).getAttribute("data-rating");
       let cover = await row.findElement(By.css("img")).getAttribute("src");
       cover = cover.replace("._SY75_","");
-      books.push({title, author, avgRating, cover});
+      let url = await row.findElement(By.css("a")).getAttribute("href");
+      books.push({title, author, avgRating, cover, url});
     }
     return books;
     // let ratedTitles = await driver.findElements(By.className("title"));
@@ -64,20 +81,6 @@ async function getTopRated () {
     // }
     // ratedNames.length = 5;
     // return ratedNames;
-}
-
-async function searchBook(){
-    driver.get(`${baseUrl}/search?q=${searchData}`);
-
-    let searchResults = await driver.findElements(By.className("bookTitle"));
-    let searchTitles = [];
-    for (let book of searchResults) {
-        searchTitles.push(await book.getText());
-    } 
-    if (searchTitles.length > 5) {
-      searchTitles.length = 5;
-    }
-    return searchTitles;
 }
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
@@ -100,6 +103,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
 
 const { Client, GatewayIntentBits } = require('discord.js');
 const { channel } = require('diagnostics_channel');
+const { url } = require('inspector');
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const wait = require('node:timers/promises').setTimeout;
 
@@ -113,8 +117,20 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'search') {
     await interaction.deferReply();
     searchData = interaction.options.getString("title");
-    let searchResults = JSON.stringify(await searchBook());
-    await interaction.editReply(searchResults);
+    let searchResults = await searchBook();
+    const embed = new EmbedBuilder()
+      .setColor(0x0099FF)
+      .setTitle(searchResults[0].title)
+      .setThumbnail(searchResults[0].cover)
+      .setURL(searchResults[0].url)
+      .addFields(
+      {name:"Author", value:searchResults[0].author, inline:true},
+      )
+      // const channel = client.channels.cache.find(channel => channel.name === "general")
+      // channel.send({ embeds : [embed] });
+    await interaction.editReply({
+      embeds : [embed]
+    });
   }
 
   if (interaction.commandName === 'currently_reading') {
@@ -122,21 +138,20 @@ client.on('interactionCreate', async interaction => {
     userId = interaction.options.getString("user");
     let currentResults = await getCurrentReading();
     // await interaction.editReply(currentResults);
-    bookNum = 0;
-    for (book in currentResults) {
+    for (let i = 0; i < currentResults.length; i++) {
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle("Current Reading")
-        .setThumbnail(currentResults[bookNum].cover)
+        .setTitle(currentResults[i].title)
+        .setThumbnail(currentResults[i].cover)
+        .setURL(currentResults[i].url)
         .addFields(
-          {name: "Book Title", value: currentResults[bookNum].title, inline:true},
-          {name: "Author", value: currentResults[bookNum].author, inline:true},
-          {name: "Average Rating", value: currentResults[bookNum].avgRating, inline:true}
+          {name: "Author", value: currentResults[i].author, inline:true},
+          {name: "Average Rating", value: currentResults[i].avgRating, inline:true}
         )
         const channel = client.channels.cache.find(channel => channel.name === "general")
         channel.send({ embeds : [embed] });
-        bookNum++;
       }
+    await interaction.reply()
   }
 
   if (interaction.commandName === 'top_rated') {
@@ -146,21 +161,19 @@ client.on('interactionCreate', async interaction => {
     // console.log(topRated[0].title)
     // await interaction.editReply(topRated[0].title);
     // console.log(topRated);
-    bookNum = 0;
-    for (book in topRated) {
+    for (let i = 0; i < topRated.length; i++) {
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle("Top Rated Books!")
-        .setThumbnail(topRated[bookNum].cover)
+        .setTitle(topRated[i].title)
+        .setThumbnail(topRated[i].cover)
+        .setURL(topRated[i].url)
         .addFields(
-          {name: "Book Title", value: topRated[bookNum].title, inline:true},
-          {name: "Book Author", value: topRated[bookNum].author, inline: true},
-          {name: "Average Rating", value: topRated[bookNum].avgRating, inline : true},
+          {name: "Book Author", value: topRated[i].author, inline: true},
+          {name: "Average Rating", value: topRated[i].avgRating, inline : true},
         )
           // await interaction.replied;
         const channel = client.channels.cache.find(channel => channel.name === "general")
         channel.send({ embeds : [embed] });
-        bookNum++;
     }
   }
 });
