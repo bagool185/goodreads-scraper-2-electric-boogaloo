@@ -134,16 +134,15 @@ client.on('interactionCreate', async interaction => {
       )
       // const channel = client.channels.cache.find(channel => channel.name === "general")
       // channel.send({ embeds : [embed] });
-    await interaction.editReply({
-      embeds : [embed]
-    });
+    await interaction.editReply({embeds : [embed]});
   }
 
   if (interaction.commandName === 'currently_reading') {
-    // await interaction.deferReply();
+    await interaction.deferReply();
     userId = interaction.options.getString("user");
     let currentResults = await getCurrentReading();
-    // await interaction.editReply(currentResults);
+    // await interaction.editReply(currentResults);#
+    let embeds = [];
     for (let i = 0; i < currentResults.length; i++) {
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
@@ -154,19 +153,21 @@ client.on('interactionCreate', async interaction => {
           {name: "Author", value: currentResults[i].author, inline:true},
           {name: "Average Rating", value: currentResults[i].avgRating, inline:true}
         )
-        const channel = client.channels.cache.find(channel => channel.name === "general")
-        channel.send({ embeds : [embed] });
-      }
-    await interaction.reply()
+        embeds.push(embed);
+        // const channel = client.channels.cache.find(channel => channel.name === "general")
+        // channel.send({ embeds : [embed] });
+    }
+    await interaction.editReply({embeds});
   }
 
   if (interaction.commandName === 'top_rated') {
-    // await interaction.deferReply();
+    await interaction.deferReply();
     userId = interaction.options.getString("user");
     let topRated = await getTopRated();
     // console.log(topRated[0].title)
     // await interaction.editReply(topRated[0].title);
     // console.log(topRated);
+    let embeds = [];
     for (let i = 0; i < topRated.length; i++) {
       const embed = new EmbedBuilder()
         .setColor(0x0099FF)
@@ -178,9 +179,11 @@ client.on('interactionCreate', async interaction => {
           {name: "Average Rating", value: topRated[i].avgRating, inline : true},
         )
           // await interaction.replied;
-        const channel = client.channels.cache.find(channel => channel.name === "general")
-        channel.send({ embeds : [embed] });
+        embeds.push(embed);   
     }
+    // const channel = client.channels.cache.find(channel => channel.name === "general")
+    // channel.send({embeds});
+    await interaction.editReply({embeds});
   }
 });
 
