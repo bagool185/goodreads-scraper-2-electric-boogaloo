@@ -19,8 +19,6 @@ const { EmbedBuilder } = require('discord.js');
     .build();
 
     
-
-
 //Get data from goodreads 
 
 async function searchBook(){
@@ -85,8 +83,27 @@ async function getTopRated () {
     // return ratedNames;
 }
 
+async function getPopularMonth () {
+  let today = new Date()
+  let mm = today.getMonth() + 1;
+  let yyyy = today.getFullYear();
+  driver.get(`${baseUrl}/book/popular_by_date/${yyyy}/${mm}`);
+  let popularBooks = await driver.findElements(By.className("BookListItem"));
+  let books = [];
+  for (let book of popularBooks){ 
+    let title = await book.findElement(By.className("Text__title3")).getText();
+    let author = await book.findElement(By.className("BookListItem__authors")).getText();
+    let avgRating = await book.findElement(By.className("AverageRating__ratingValue")).getText();
+    let cover = await book.findElement(By.className("ResponsiveImage")).getAttribute("src");
+    let url = await book.findElement(By.className("BookCard__clickCardTarget")).getAttribute("href");
+    console.log(url);
+    books.push({title, author, avgRating, cover, url});
+  }
+  return books;
+
+}
+
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
-console.log(process.env.TOKEN);
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
   
 
@@ -185,8 +202,26 @@ client.on('interactionCreate', async interaction => {
     // channel.send({embeds});
     await interaction.editReply({embeds});
   }
+
+  if (interaction.commandName === 'popular_month') {
+    await interaction.deferReply();
+    let popularBooks = await getPopularMonth();
+    let embeds = [];
+    for (let i = 0; i < 5; i++){
+      const embed = new EmbedBuilder()
+      .setColor(0x0099FF)
+      .setTitle(popularBooks[i].title)
+      .setThumbnail(popularBooks[i].cover)
+      .setURL(popularBooks[i].url)
+      .addFields(
+        {name: "Book Author", value: popularBooks[i].author, inline: true},
+        {name: "Average Rating", value: popularBooks[i].avgRating, inline : true},
+      )
+        // await interaction.replied;
+      embeds.push(embed);  
+    }
+    interaction.editReply({embeds});
+  }
 });
-
-
 
 // setTimeout(cleanDrivers, 10000);

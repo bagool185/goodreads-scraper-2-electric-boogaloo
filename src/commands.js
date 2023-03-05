@@ -38,6 +38,10 @@ const commands = [
           "type": 3,
         }
       ]
+    },
+    {
+      name: 'popular_month',
+      description: 'This months most popular books'
     }
     
   ];
