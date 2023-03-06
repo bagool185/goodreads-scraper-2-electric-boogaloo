@@ -20,6 +20,8 @@
   "dependencies": {
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
+    "mongodb": "^5.1.0",
+    "mongoose": "^7.0.1",
     "selenium-webdriver": "^4.8.0"
   }
 }

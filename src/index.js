@@ -11,14 +11,13 @@ const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const { commands } = require('./commands.js');
 const { EmbedBuilder } = require('discord.js');
 
-  //Open browser window, headless allows for it to run in the background
+//Open browser window, headless allows for it to run in the background
 
     let driver = new webdriver.Builder()
     .forBrowser('firefox')
     // .setFirefoxOptions(new firefox.Options().headless())
     .build();
 
-    
 //Get data from goodreads 
 
 async function searchBook(){
@@ -40,8 +39,6 @@ async function getCurrentReading (){
     driver.get(`${baseUrl}/review/list/${userId}?shelf=currently-reading`);
 
     let rows = await driver.findElements(By.className("bookalike"))
-    // console.log(await title.findElement(By.css("a")).getAttribute("title"));
-    // titles.splice(0, 1);
     let books = [];
     for (let row of rows){
         let title = await row.findElement(By.className("title")).getText();
@@ -52,7 +49,6 @@ async function getCurrentReading (){
         let url = await row.findElement(By.css("a")).getAttribute("href");
         books.push({title, author, avgRating, cover, url});
     }
-    // console.log(books[0].title);
     return books;
 };
 
@@ -66,21 +62,12 @@ async function getTopRated () {
       let title = await row.findElement(By.className("title")).getText();
       let author = await row.findElement(By.className("author")).getText();
       let avgRating = await row.findElement(By.className("avg_rating")).getText();
-      // let rating = await row.findElement(By.className("stars")).getAttribute("data-rating");
       let cover = await row.findElement(By.css("img")).getAttribute("src");
       cover = cover.replace("._SY75_","");
       let url = await row.findElement(By.css("a")).getAttribute("href");
       books.push({title, author, avgRating, cover, url});
     }
     return books;
-    // let ratedTitles = await driver.findElements(By.className("title"));
-    // ratedTitles.splice(0,1);
-    // let ratedNames = [];
-    // for (let name of ratedTitles){
-    //     ratedNames.push(await name.findElement(By.css("a")).getAttribute("title"));
-    // }
-    // ratedNames.length = 5;
-    // return ratedNames;
 }
 
 async function getPopularMonth () {
@@ -100,6 +87,10 @@ async function getPopularMonth () {
     books.push({title, author, avgRating, cover, url});
   }
   return books;
+
+}
+
+async function addUser () {
 
 }
 
@@ -158,7 +149,6 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     userId = interaction.options.getString("user");
     let currentResults = await getCurrentReading();
-    // await interaction.editReply(currentResults);#
     let embeds = [];
     for (let i = 0; i < currentResults.length; i++) {
       const embed = new EmbedBuilder()
@@ -181,9 +171,6 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     userId = interaction.options.getString("user");
     let topRated = await getTopRated();
-    // console.log(topRated[0].title)
-    // await interaction.editReply(topRated[0].title);
-    // console.log(topRated);
     let embeds = [];
     for (let i = 0; i < topRated.length; i++) {
       const embed = new EmbedBuilder()
@@ -195,7 +182,6 @@ client.on('interactionCreate', async interaction => {
           {name: "Book Author", value: topRated[i].author, inline: true},
           {name: "Average Rating", value: topRated[i].avgRating, inline : true},
         )
-          // await interaction.replied;
         embeds.push(embed);   
     }
     // const channel = client.channels.cache.find(channel => channel.name === "general")
@@ -217,11 +203,15 @@ client.on('interactionCreate', async interaction => {
         {name: "Book Author", value: popularBooks[i].author, inline: true},
         {name: "Average Rating", value: popularBooks[i].avgRating, inline : true},
       )
-        // await interaction.replied;
       embeds.push(embed);  
     }
     interaction.editReply({embeds});
   }
+
+  if (interaction.commandName === 'add_user') {
+    console.log(interaction.user.id);
+  }
 });
+
 
 // setTimeout(cleanDrivers, 10000);

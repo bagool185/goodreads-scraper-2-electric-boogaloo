@@ -42,6 +42,18 @@ const commands = [
     {
       name: 'popular_month',
       description: 'This months most popular books'
+    },
+    {
+      name: 'add_user',
+      description: 'Store your goodreads ID',
+      options: [
+        {
+          "name": "user",
+          "description": "User ID",
+          "required": true,
+          "type": 3,
+        }
+      ]
     }
     
   ];
