@@ -1,6 +1,6 @@
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
-
+let database = require('./database.js');
 const baseUrl = "http://goodreads.com";
 let  userId = "82924012-bagool";
 let searchData = "THE BIBLE";
@@ -90,8 +90,8 @@ async function getPopularMonth () {
 
 }
 
-async function addUser () {
-
+async function addUser (discordID, goodreadsID) {
+  await database.storeUser(discordID, goodreadsID);
 }
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
@@ -209,7 +209,9 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.commandName === 'add_user') {
-    console.log(interaction.user.id);
+    userId = interaction.options.getString("user");
+    await addUser(interaction.user.id, userId);
+    interaction.reply("User added to database")
   }
 });
 
