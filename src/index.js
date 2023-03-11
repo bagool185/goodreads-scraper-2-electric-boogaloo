@@ -10,6 +10,7 @@ const firefox = require('selenium-webdriver/firefox');
 const { SlashCommandBuilder, ChannelType } = require('discord.js');
 const { commands } = require('./commands.js');
 const { EmbedBuilder } = require('discord.js');
+const embedUtils = require('./embeds.js');
 
 //Open browser window, headless allows for it to run in the background
 
@@ -83,7 +84,6 @@ async function getPopularMonth () {
     let avgRating = await book.findElement(By.className("AverageRating__ratingValue")).getText();
     let cover = await book.findElement(By.className("ResponsiveImage")).getAttribute("src");
     let url = await book.findElement(By.className("BookCard__clickCardTarget")).getAttribute("href");
-    console.log(url);
     books.push({title, author, avgRating, cover, url});
   }
   return books;
@@ -135,16 +135,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     searchData = interaction.options.getString("title");
     let searchResults = await searchBook();
-    const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle(searchResults[0].title)
-      .setThumbnail(searchResults[0].cover)
-      .setURL(searchResults[0].url)
-      .addFields(
-      {name:"Author", value:searchResults[0].author, inline:true},
-      )
-      // const channel = client.channels.cache.find(channel => channel.name === "general")
-      // channel.send({ embeds : [embed] });
+    let embed = embedUtils.createEmbed(searchResults[0], {name:"Author", value:searchResults[0].author, inline:true});
     await interaction.editReply({embeds : [embed]});
   }
 
@@ -154,18 +145,8 @@ client.on('interactionCreate', async interaction => {
     let currentResults = await getCurrentReading();
     let embeds = [];
     for (let i = 0; i < currentResults.length; i++) {
-      const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setTitle(currentResults[i].title)
-        .setThumbnail(currentResults[i].cover)
-        .setURL(currentResults[i].url)
-        .addFields(
-          {name: "Author", value: currentResults[i].author, inline:true},
-          {name: "Average Rating", value: currentResults[i].avgRating, inline:true}
-        )
+        let embed = embedUtils.createEmbed(currentResults[i], embedUtils.commonFields(currentResults[i]))
         embeds.push(embed);
-        // const channel = client.channels.cache.find(channel => channel.name === "general")
-        // channel.send({ embeds : [embed] });
     }
     await interaction.editReply({embeds});
   }
@@ -176,19 +157,10 @@ client.on('interactionCreate', async interaction => {
     let topRated = await getTopRated();
     let embeds = [];
     for (let i = 0; i < topRated.length; i++) {
-      const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
-        .setTitle(topRated[i].title)
-        .setThumbnail(topRated[i].cover)
-        .setURL(topRated[i].url)
-        .addFields(
-          {name: "Book Author", value: topRated[i].author, inline: true},
-          {name: "Average Rating", value: topRated[i].avgRating, inline : true},
-        )
-        embeds.push(embed);   
+      let embed = embedUtils.createEmbed(topRated[i], {name: "Book Author", value: topRated[i].author, inline: true},
+      {name: "Average Rating", value: topRated[i].avgRating, inline : true})
+      embeds.push(embed);   
     }
-    // const channel = client.channels.cache.find(channel => channel.name === "general")
-    // channel.send({embeds});
     await interaction.editReply({embeds});
   }
 
@@ -197,15 +169,7 @@ client.on('interactionCreate', async interaction => {
     let popularBooks = await getPopularMonth();
     let embeds = [];
     for (let i = 0; i < 5; i++){
-      const embed = new EmbedBuilder()
-      .setColor(0x0099FF)
-      .setTitle(popularBooks[i].title)
-      .setThumbnail(popularBooks[i].cover)
-      .setURL(popularBooks[i].url)
-      .addFields(
-        {name: "Book Author", value: popularBooks[i].author, inline: true},
-        {name: "Average Rating", value: popularBooks[i].avgRating, inline : true},
-      )
+      let embed = embedUtils.createEmbed(popularBooks[i], ...embedUtils.commonFields(popularBooks[i]))
       embeds.push(embed);  
     }
     interaction.editReply({embeds});
@@ -214,13 +178,11 @@ client.on('interactionCreate', async interaction => {
   if (interaction.commandName === 'add_user') {
     userId = interaction.options.getString("user");
     let querySuccesful = await addUser(interaction.user.id, userId);
-    // console.log(querySuccesful);
     if (querySuccesful) {
       interaction.reply("User added to database")
     } else {
       interaction.reply("User not added to database :(")
     } 
   }
-});
 
-// setTimeout(cleanDrivers, 10000);
+});
