@@ -9,6 +9,12 @@ mongoose.connect('mongodb://127.0.0.1:27017/good_database').then(console.log("Se
 async function storeUser(discordID, goodreadsID){
     const silence = new user({ discordID: discordID, goodreadsID: goodreadsID });
     await silence.save();
+    console.log("User saved");
 };
 
-module.exports = {storeUser};
+async function searchUser(discordID){
+    let searchResults = await user.find({'discordID': discordID}).exec();
+    return searchResults;
+};
+
+module.exports = {storeUser, searchUser};

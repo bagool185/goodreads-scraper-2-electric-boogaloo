@@ -50,7 +50,7 @@ async function getCurrentReading (){
         books.push({title, author, avgRating, cover, url});
     }
     return books;
-};
+}
 
 async function getTopRated () {
     driver.get(`${baseUrl}/review/list/${userId}?shelf=read&sort=rating`);
@@ -91,12 +91,15 @@ async function getPopularMonth () {
 }
 
 async function addUser (discordID, goodreadsID) {
-  await database.storeUser(discordID, goodreadsID);
+  let results = await database.searchUser(discordID);
+  if (results.length == 0){
+    await database.storeUser(discordID, goodreadsID);
+    return true;
+  } else {return false;}
 }
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
-const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-  
+const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);  
 
 (async () => {
   try {
@@ -210,10 +213,14 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'add_user') {
     userId = interaction.options.getString("user");
-    await addUser(interaction.user.id, userId);
-    interaction.reply("User added to database")
+    let querySuccesful = await addUser(interaction.user.id, userId);
+    // console.log(querySuccesful);
+    if (querySuccesful) {
+      interaction.reply("User added to database")
+    } else {
+      interaction.reply("User not added to database :(")
+    } 
   }
 });
-
 
 // setTimeout(cleanDrivers, 10000);
