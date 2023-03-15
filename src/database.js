@@ -14,7 +14,9 @@ async function storeUser(discordID, goodreadsID){
 
 async function searchUser(discordID){
     let searchResults = await user.find({'discordID': discordID}).exec();
-    return searchResults;
+    if(searchResults.length > 0){
+    return searchResults[0];}
+    else {return null}
 };
 
 module.exports = {storeUser, searchUser};

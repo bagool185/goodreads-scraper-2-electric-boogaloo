@@ -22,7 +22,7 @@ const commands = [
         {
           "name": "user",
           "description": "User ID",
-          "required": true,
+          "required": false,
           "type": 3,
         }
       ]
@@ -34,7 +34,7 @@ const commands = [
         {
           "name": "user",
           "description": "User ID",
-          "required": true,
+          "required": false,
           "type": 3,
         }
       ]
@@ -50,7 +50,7 @@ const commands = [
         {
           "name": "user",
           "description": "User ID",
-          "required": true,
+          "required": false,
           "type": 3,
         }
       ]

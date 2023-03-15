@@ -2,8 +2,6 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 let database = require('./database.js');
 const baseUrl = "http://goodreads.com";
-let  userId = "82924012-bagool";
-let searchData = "THE BIBLE";
 const { By } = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const firefox = require('selenium-webdriver/firefox');
@@ -21,7 +19,7 @@ const embedUtils = require('./embeds.js');
 
 //Get data from goodreads 
 
-async function searchBook(){
+async function searchBook(searchData){
   driver.get(`${baseUrl}/search?q=${searchData}`);
 
   let searchResult = await driver.findElement(By.css("tr"));
@@ -36,7 +34,7 @@ async function searchBook(){
 return searchBook;
 }
 
-async function getCurrentReading (){
+async function getCurrentReading (userId){
     driver.get(`${baseUrl}/review/list/${userId}?shelf=currently-reading`);
 
     let rows = await driver.findElements(By.className("bookalike"))
@@ -53,8 +51,8 @@ async function getCurrentReading (){
     return books;
 }
 
-async function getTopRated () {
-    driver.get(`${baseUrl}/review/list/${userId}?shelf=read&sort=rating`);
+async function getTopRated (userID) {
+    driver.get(`${baseUrl}/review/list/${userID}?shelf=read&sort=rating`);
 
     let ratedRows = await driver.findElements(By.className("bookalike"));
     ratedRows.length = 5;
@@ -133,19 +131,20 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'search') {
     await interaction.deferReply();
-    searchData = interaction.options.getString("title");
-    let searchResults = await searchBook();
+    let searchResults = await searchBook(interaction.options.getString("title"));
     let embed = embedUtils.createEmbed(searchResults[0], {name:"Author", value:searchResults[0].author, inline:true});
     await interaction.editReply({embeds : [embed]});
   }
 
   if (interaction.commandName === 'currently_reading') {
     await interaction.deferReply();
-    userId = interaction.options.getString("user");
-    let currentResults = await getCurrentReading();
+    let searchResult = await database.searchUser(interaction.user.id);
+    let userID = searchResult['goodreadsID']
+    // let userIDInput = interaction.options.getString("user");
+    let currentResults = await getCurrentReading(userID);
     let embeds = [];
     for (let i = 0; i < currentResults.length; i++) {
-        let embed = embedUtils.createEmbed(currentResults[i], embedUtils.commonFields(currentResults[i]))
+        let embed = embedUtils.createEmbed(currentResults[i], ...embedUtils.commonFields(currentResults[i]))
         embeds.push(embed);
     }
     await interaction.editReply({embeds});
@@ -153,13 +152,13 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'top_rated') {
     await interaction.deferReply();
-    userId = interaction.options.getString("user");
-    let topRated = await getTopRated();
+    let searchResult = await database.searchUser(interaction.user.id);
+    let userID = searchResult['goodreadsID']
+    let topRated = await getTopRated(userID);
     let embeds = [];
     for (let i = 0; i < topRated.length; i++) {
-      let embed = embedUtils.createEmbed(topRated[i], {name: "Book Author", value: topRated[i].author, inline: true},
-      {name: "Average Rating", value: topRated[i].avgRating, inline : true})
-      embeds.push(embed);   
+      let embed = embedUtils.createEmbed(topRated[i], ...embedUtils.commonFields(topRated[i]));
+      embeds.push(embed);
     }
     await interaction.editReply({embeds});
   }
