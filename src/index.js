@@ -138,9 +138,13 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'currently_reading') {
     await interaction.deferReply();
-    let searchResult = await database.searchUser(interaction.user.id);
-    let userID = searchResult['goodreadsID']
-    // let userIDInput = interaction.options.getString("user");
+    let userID = "";
+    if (interaction.options.getString("user") != null){
+      userID = interaction.options.getString("user");
+    } else {
+      let searchResult = await database.searchUser(interaction.user.id);
+      userID = searchResult['goodreadsID']
+    }
     let currentResults = await getCurrentReading(userID);
     let embeds = [];
     for (let i = 0; i < currentResults.length; i++) {
@@ -152,8 +156,13 @@ client.on('interactionCreate', async interaction => {
 
   if (interaction.commandName === 'top_rated') {
     await interaction.deferReply();
-    let searchResult = await database.searchUser(interaction.user.id);
-    let userID = searchResult['goodreadsID']
+    let userID = "";
+    if (interaction.options.getString("user") != null){
+      userID = interaction.options.getString("user");
+    } else {
+      let searchResult = await database.searchUser(interaction.user.id);
+      userID = searchResult['goodreadsID']
+    }
     let topRated = await getTopRated(userID);
     let embeds = [];
     for (let i = 0; i < topRated.length; i++) {
