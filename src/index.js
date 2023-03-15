@@ -90,11 +90,25 @@ async function getPopularMonth () {
 
 async function addUser (discordID, goodreadsID) {
   let results = await database.searchUser(discordID);
-  if (results.length == 0){
+  if (results == null){
     await database.storeUser(discordID, goodreadsID);
     return true;
   } else {return false;}
 }
+
+function parseGoodreadsUserID(userID){
+  if (userID.includes("goodreads.com")){
+    let splitUser = userID.split("/");
+    if (splitUser[splitUser.length -1] == ""){
+      return splitUser[splitUser.length -2];
+    } else {
+      return splitUser[splitUser.length -1]
+    }
+  } else {
+    return userID;
+  }
+
+};
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
 const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);  
@@ -140,7 +154,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     let userID = "";
     if (interaction.options.getString("user") != null){
-      userID = interaction.options.getString("user");
+      userID = parseGoodreadsUserID(interaction.options.getString("user"));
     } else {
       let searchResult = await database.searchUser(interaction.user.id);
       userID = searchResult['goodreadsID']
@@ -158,7 +172,7 @@ client.on('interactionCreate', async interaction => {
     await interaction.deferReply();
     let userID = "";
     if (interaction.options.getString("user") != null){
-      userID = interaction.options.getString("user");
+      userID = parseGoodreadsUserID(interaction.options.getString("user"));
     } else {
       let searchResult = await database.searchUser(interaction.user.id);
       userID = searchResult['goodreadsID']
@@ -184,7 +198,7 @@ client.on('interactionCreate', async interaction => {
   }
 
   if (interaction.commandName === 'add_user') {
-    userId = interaction.options.getString("user");
+    userId = parseGoodreadsUserID(interaction.options.getString("user"));
     let querySuccesful = await addUser(interaction.user.id, userId);
     if (querySuccesful) {
       interaction.reply("User added to database")
