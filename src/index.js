@@ -5,7 +5,7 @@ const baseUrl = "http://goodreads.com";
 const { By } = require('selenium-webdriver');
 const webdriver = require('selenium-webdriver');
 const firefox = require('selenium-webdriver/firefox');
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, ChannelType, quote } = require('discord.js');
 const { commands } = require('./commands.js');
 const { EmbedBuilder } = require('discord.js');
 const embedUtils = require('./embeds.js');
@@ -16,6 +16,7 @@ let driver = new webdriver.Builder()
   .forBrowser('firefox')
   // .setFirefoxOptions(new firefox.Options().headless())
   .build();
+driver.manage().setTimeouts({implicit:5000, pageLoad: 10000}).then()
 
 //Get data from goodreads 
 
@@ -117,6 +118,17 @@ async function validifyUserID(userID) {
   return !mainContent.includes("Back to the Goodreads homepage")
 }
 
+async function randomQuote() {
+  await driver.get(`${baseUrl}/quotes?page=${Math.floor(Math.random() * 100) + 1}`);
+  let quotes = await driver.findElements(By.className("quote"));
+  let number = Math.floor(Math.random() * quotes.length);
+  let text = await quotes[number].findElement(By.className("quoteText")).getText();
+  let image = await quotes[number].findElement(By.css("img")).getAttribute("src");
+  let quote = {text, image};
+  console.log(quote);
+  return quote;
+}
+
 async function getProfile(userID){
   await driver.get(`${baseUrl}/user/show/${userID}`);
   let profileData = await driver.findElement(By.className("mainContentFloat"));
@@ -125,7 +137,6 @@ async function getProfile(userID){
   profile["name"] = await profileData.findElement(By.className("userProfileName")).getText();
   let temp = await profileData.findElements(By.className("userShowPageShelfListItem"));
   profile["shelves"] = await Promise.all(temp.map(element => element.getText()));
-  console.log(profile);
   return profile;
 }
 
@@ -243,7 +254,7 @@ client.on('interactionCreate', async interaction => {
       let searchResult = await database.searchUser(interaction.user.id);
       userID = searchResult['goodreadsID']
     }
-    
+
     if (await validifyUserID(userID)) {
       let profile = await getProfile(userID);
       let fields = [];  
@@ -262,5 +273,30 @@ client.on('interactionCreate', async interaction => {
     } else {
       await interaction.editReply("Goodreads ID invalid");
     }
+  }
+
+  if (interaction.commandName === 'quote') {
+    await interaction.deferReply();
+    let quote = await randomQuote();
+    const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle("Random Quote :)")
+        .setThumbnail(quote.image)
+        .setDescription(quote.text);
+    await interaction.editReply({embeds: [embed]});
+  }
+
+  if (interaction.commandName === 'help') {
+    await interaction.deferReply();
+    const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle("Help")
+        .setThumbnail("https://i.redd.it/9z9sqjxnz2831.jpg")
+        .addFields(
+        ...commands.map(command => {
+          return {name: command.name, value: command.description};
+        }),
+        )
+    await interaction.editReply({embeds: [embed]});
   }
 });

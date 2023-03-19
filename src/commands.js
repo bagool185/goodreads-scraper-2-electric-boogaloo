@@ -1,9 +1,5 @@
 const commands = [
     {
-      name: 'ping',
-      description: 'Replies with Pong!',
-    },
-    {
       name: 'search',
       description: 'Searches for a book by title',
       options: [
@@ -17,7 +13,7 @@ const commands = [
     },
     {
       name: 'currently_reading',
-      description: 'Get users currently reading books (Max 5)',
+      description: 'Get users currently reading books',
       options: [
         {
           "name": "user",
@@ -66,6 +62,14 @@ const commands = [
           "type": 3,
         }
       ]
+    },
+    {
+      name: 'quote',
+      description: 'Get a random quote',
+    },
+    {
+      name: 'help',
+      description: 'Gives a list of all commands'
     }
     
   ];
