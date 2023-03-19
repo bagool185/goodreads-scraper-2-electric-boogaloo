@@ -54,6 +54,18 @@ const commands = [
           "type": 3,
         }
       ]
+    },
+    {
+      name: 'get_profile',
+      description: 'Show a profile preview',
+      options: [
+        {
+          "name": "user",
+          "description": "User ID",
+          "required": false,
+          "type": 3,
+        }
+      ]
     }
     
   ];

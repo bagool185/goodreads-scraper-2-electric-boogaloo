@@ -111,10 +111,22 @@ function parseGoodreadsUserID(userID) {
 };
 
 async function validifyUserID(userID) {
-  driver.get(`${baseUrl}/user/show/${userID}`);
+  await driver.get(`${baseUrl}/user/show/${userID}`);
   let mainContent = await driver.findElement(By.css(".leftContainer  .gr-button")).getText();
   console.log(mainContent);
   return !mainContent.includes("Back to the Goodreads homepage")
+}
+
+async function getProfile(userID){
+  await driver.get(`${baseUrl}/user/show/${userID}`);
+  let profileData = await driver.findElement(By.className("mainContentFloat"));
+  let profile = {}
+  profile["profilePicture"] = await profileData.findElement(By.className("profilePictureIcon")).getAttribute("src");
+  profile["name"] = await profileData.findElement(By.className("userProfileName")).getText();
+  let temp = await profileData.findElements(By.className("userShowPageShelfListItem"));
+  profile["shelves"] = await Promise.all(temp.map(element => element.getText()));
+  console.log(profile);
+  return profile;
 }
 
 const { REST, Routes, Message, MessageComponentInteraction } = require('discord.js');
@@ -222,4 +234,33 @@ client.on('interactionCreate', async interaction => {
     }
   }
 
+  if (interaction.commandName === 'get_profile') {
+    await interaction.deferReply();
+    let userID = "";
+    if (interaction.options.getString("user") != null) {
+      userID = parseGoodreadsUserID(interaction.options.getString("user"));
+    } else {
+      let searchResult = await database.searchUser(interaction.user.id);
+      userID = searchResult['goodreadsID']
+    }
+    
+    if (await validifyUserID(userID)) {
+      let profile = await getProfile(userID);
+      let fields = [];  
+      for (let i = 0; profile.shelves.length > i; i++) {
+        fields.push({name: "Shelf " + (i + 1), value: profile.shelves[i], inline: true});
+      }
+      const embed = new EmbedBuilder()
+        .setColor(0x0099FF)
+        .setTitle(profile.name)
+        .setThumbnail(profile.profilePicture)
+        .setURL(`${baseUrl}/user/show/${userID}`)
+        .addFields(
+          ...fields
+        )
+      await interaction.editReply({embeds: [embed]});
+    } else {
+      await interaction.editReply("Goodreads ID invalid");
+    }
+  }
 });
